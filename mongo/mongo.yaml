@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mongo-deployment
+  name: mongo
   labels:
     app: mongo
 spec:
+  serviceName: mongo-service
   replicas: 1
   selector:
     matchLabels:
@@ -14,23 +15,28 @@ spec:
       labels:
         app: mongo
     spec:
+      enableServiceLinks: false
       containers:
       - name: mongo
-        image: mongo:5.0
+        image: mongo:latest
         ports:
         - containerPort: 27017
-        env:
-        - name: MONGO_INITDB_ROOT_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: mongo-secret
-              key: mongo-user
-        - name: MONGO_INITDB_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mongo-secret
-              key: mongo-password  
-
+        envFrom:
+        - secretRef:
+            name: mongo-secret
+        volumeMounts:
+        - mountPath: /var/lib/
+          name: mongo-data
+      hostname: mongo
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
@@ -41,5 +47,6 @@ spec:
     app: mongo
   ports:
     - protocol: TCP
+      name: port
       port: 27017
       targetPort: 27017

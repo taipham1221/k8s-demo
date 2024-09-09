@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: akhq
+  labels:
+    app: akhq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: akhq
+  template:
+    metadata:
+      labels:
+        app: akhq
+    spec:
+      containers:
+        - name: akhq
+          image: tchiotludo/akhq:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: AKHQ_CONFIGURATION
+              value: |
+                akhq:
+                  connections:
+                    docker-kafka-server:
+                      properties:
+                        bootstrap.servers: "kafka:29092"
+                    docker-kafka-server-secondary:
+                      properties:
+                        bootstrap.servers: "kafka-secondary:29092"
+          imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: akhq
+spec:
+  selector:
+    app: akhq
+  ports:
+    - protocol: TCP
+      name: webui
+      port: 8080
+      targetPort: 8080
