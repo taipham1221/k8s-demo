@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    service: zookeeper-secondary
+  name: zookeeper-secondary
+spec:
+  serviceName: zookeeper-secondary
+  replicas: 1
+  selector:
+    matchLabels:
+      service: zookeeper-secondary
+  template:
+    metadata:
+      labels:
+        network/kafka-secondary-network: "true"
+        service: zookeeper-secondary
+    spec:
+      securityContext:
+        fsGroup: 1000
+      enableServiceLinks: false
+      containers:
+        - name: zookeeper-secondary
+          imagePullPolicy: Always
+          image: zookeeper
+          ports:
+            - containerPort: 2181
+          env:
+            - name: ZOOKEEPER_CLIENT_PORT
+              value: "2181"
+            - name: ZOOKEEPER_DATA_DIR
+              value: "/var/lib/zookeeper/data"
+            - name: ZOOKEEPER_LOG_DIR
+              value: "/var/lib/zookeeper/log"
+            - name: ZOOKEEPER_SERVER_ID
+              value: "2"
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/zookeeper/data
+              name: zookeeper-secondary-data
+            - mountPath: /var/lib/zookeeper/log
+              name: zookeeper-secondary-log
+      hostname: zookeeper
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: zookeeper-secondary-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1024Mi
+    - metadata:
+        name: zookeeper-secondary-log
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1024Mi

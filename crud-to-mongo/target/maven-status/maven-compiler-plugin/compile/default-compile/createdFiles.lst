@@ -1,0 +1,4 @@
+mongo\OffsetDateTimeCodec.class
+mongo\DataStreamJob.class
+mongo\DataStreamJob$CRUD.class
+mongo\Connection.class
